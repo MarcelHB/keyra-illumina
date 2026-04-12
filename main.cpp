@@ -207,6 +207,8 @@ int main(int argc, char **argv) {
   SDL_Event event;
   while (true) {
     if (SDL_PollEvent(&event) != 1) {
+      // Win: ~500µs, Linux: ~50µs
+      SDL_DelayNS(1000);
       continue;
     }
 
