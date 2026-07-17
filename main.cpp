@@ -27,10 +27,10 @@ struct Config {
 
 enum class Reaction {
     NONE
-  , DODGE   // Q
-  , PARRY   // E
-  , PARRY2  // W
-  , JUMP    // SPACE
+  , DODGE   // Q / B
+  , PARRY   // E / RB
+  , PARRY2  // W / RT
+  , JUMP    // SPACE / A
   , BAD     // something else
   , LOSS    // something lost
 };
@@ -85,6 +85,11 @@ struct RenderState {
   SDL_Texture *backgroundLayer = nullptr;
   SDL_Texture *hitLayer = nullptr;
   SDL_Texture *evaluationLayer = nullptr;
+
+  SDL_Gamepad *gamepad = nullptr;
+  SDL_JoystickID gamepadID = 0;
+  int16_t lastRightAxisMotion = 0;
+  bool lastRightAxisNeedsReset = false;
 };
 
 struct Difficulty {
@@ -148,15 +153,20 @@ bool increaseDifficulty();
 void newGame();
 void paintTheGame();
 void parseConfig(int, char**);
-void processKeyDown(const SDL_KeyboardEvent& event);
-void processKeyUp(const SDL_KeyboardEvent& event);
 void resetHitLayer();
 void resetTurn();
 int shutdown(bool error);
 
+void processGamepadAxisMoution(const SDL_GamepadAxisEvent&);
+void processGamepadButtonDown(const SDL_GamepadButtonEvent&);
+void processKeyDown(const SDL_KeyboardEvent&);
+void processKeyUp();
+
 int main(int argc, char **argv) {
   parseConfig(argc, argv);
-  SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO);
+  if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
+    return shutdown(true);
+  }
 
   auto props = SDL_CreateProperties();
   SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, "Keyra Illumina");
@@ -215,8 +225,26 @@ int main(int argc, char **argv) {
     game.controlAction = GameControlAction::NONE;
     if (event.type == SDL_EVENT_KEY_DOWN) {
       processKeyDown(event.key);
-    } else if (event.type == SDL_EVENT_KEY_UP) {
-      processKeyUp(event.key);
+    } else if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
+      if (render.gamepad != nullptr) {
+        continue;
+      }
+
+      render.gamepad = SDL_OpenGamepad(event.gdevice.which);
+      render.gamepadID = event.gdevice.which;
+    } else if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
+      if (render.gamepad == nullptr || render.gamepadID != event.gdevice.which) {
+        continue;
+      }
+
+      SDL_CloseGamepad(render.gamepad);
+      render.gamepad = nullptr;
+    } else if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+      processGamepadButtonDown(event.gbutton);
+    } else if (event.type == SDL_EVENT_GAMEPAD_AXIS_MOTION) {
+      processGamepadAxisMoution(event.gaxis);
+    } else if (event.type == SDL_EVENT_KEY_UP || event.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
+      processKeyUp();
     } else if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
       game.controlAction = GameControlAction::QUIT;
     }
@@ -603,6 +631,90 @@ void parseConfig(int argc, char **argv) {
   }
 }
 
+// RT button handling
+void processGamepadAxisMoution(const SDL_GamepadAxisEvent& event) {
+  TRACY(ZoneScoped);
+
+  bool captureInput = false;
+  Input input;
+  input.on = event.timestamp;
+
+  // this may be sticks: too many events on moving, discard
+  if (event.axis != 5) {
+    return;
+  }
+
+  // turning point or max value
+  if (!render.lastRightAxisNeedsReset
+      && (event.value < render.lastRightAxisMotion || event.value == std::numeric_limits<int16_t>::max())) {
+    captureInput = true;
+    input.reaction = Reaction::PARRY2;
+    render.lastRightAxisNeedsReset = true;
+  } else if (render.lastRightAxisNeedsReset && event.value == 0) {
+    render.lastRightAxisNeedsReset = false;
+  }
+
+  render.lastRightAxisMotion = event.value;
+
+  if (captureInput) {
+    std::lock_guard<std::mutex> lock {game.stateMutex};
+    game.turn.player.emplace_back(std::move(input));
+  }
+}
+
+void processGamepadButtonDown(const SDL_GamepadButtonEvent& event) {
+  TRACY(ZoneScoped);
+
+  Input input;
+  input.on = event.timestamp;
+
+  game.controlAction = GameControlAction::NONE;
+  switch (event.button) {
+    case 1: // B
+      input.reaction = Reaction::DODGE; break;
+    case 10: // RB
+      input.reaction = Reaction::PARRY; break;
+    case 0: // A
+      input.reaction = Reaction::JUMP; break;
+    case 7: // L (M1)
+      game.controlAction = GameControlAction::RESET;
+      break;
+    case 6: // burger
+      game.controlAction = GameControlAction::RESTART;
+      break;
+    case 11: // arrow up
+      if (increaseDifficulty()) {
+        game.controlAction = GameControlAction::RESET;
+      }
+      break;
+    case 12: // arrow down
+      if (decreaseDifficulty()) {
+        game.controlAction = GameControlAction::RESET;
+      }
+      break;
+    case 4: // windows
+      game.controlAction = GameControlAction::QUIT;
+      break;
+    default:
+      input.reaction = Reaction::BAD;
+  }
+
+  if (game.controlAction != GameControlAction::NONE) {
+    return;
+  }
+
+  if (game.currentKeyPresses > 0) {
+    input.reaction = Reaction::LOSS;
+  }
+
+  game.currentKeyPresses += 1;
+
+  {
+    std::lock_guard<std::mutex> lock {game.stateMutex};
+    game.turn.player.emplace_back(std::move(input));
+  }
+}
+
 void processKeyDown(const SDL_KeyboardEvent& event) {
   TRACY(ZoneScoped);
 
@@ -657,11 +769,10 @@ void processKeyDown(const SDL_KeyboardEvent& event) {
   {
     std::lock_guard<std::mutex> lock {game.stateMutex};
     game.turn.player.emplace_back(std::move(input));
-    // TODO: just in case of excessive input, handle further pre-allocation
   }
 }
 
-void processKeyUp(const SDL_KeyboardEvent& event) {
+void processKeyUp() {
   if (game.currentKeyPresses > 0) {
     game.currentKeyPresses -= 1;
   }
@@ -686,6 +797,11 @@ void resetTurn() {
 }
 
 int shutdown(bool error) {
+  if (render.gamepad != nullptr) {
+    SDL_CloseGamepad(render.gamepad);
+    render.gamepad = nullptr;
+  }
+
   if (render.backgroundLayer != nullptr) {
     SDL_DestroyTexture(render.backgroundLayer);
     render.backgroundLayer = nullptr;

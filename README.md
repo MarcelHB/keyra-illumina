@@ -23,24 +23,25 @@ delays, in a way similar to _Guitar Hero_.
 
 ## Use
 
-For rows represent the default interactions any keys, from top to bottom:
+Four rows represent the default interactions any keys, from top to bottom,
+keyboard or XBox controller:
 
-1. Dodge: Q
-1. Parry: E
-1. Gradient parry: W
-1. Jump: Space
+1. Dodge: Q / B
+1. Parry: E / RB
+1. Gradient parry: W / RT
+1. Jump: Space / A
 
 You train pressing the respective button when the ruler moves over some
 rectangle on the respective line. There are three difficulties, starting
 at _Expeditioner_ mode.
 
-Additionally, you may control the tool:
+Additionally, you may control the tool (keyboard / XBox controller):
 
-* R: Randomize layout
-* S: Restart
-* +: Increase difficulty
-* -: Decrease difficulty
-* ESC: Exit
+* R / L (M1): Randomize layout
+* S / burger button: Restart
+* + / arrow up: Increase difficulty
+* - / arrow down: Decrease difficulty
+* ESC / windows button: Exit
 
 You may want to start the game with `-novsync` to test without
 application-enforced VSync.
