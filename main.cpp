@@ -37,6 +37,7 @@ enum class Reaction {
 
 enum class Action {
     DODGE_PARRY
+  , DANSEUSE
   , PARRY2
   , JUMP
 };
@@ -318,7 +319,7 @@ void drawEvaluation() {
     }
 
     size_t i = 0;
-    bool success = false, betterSuccess = false;
+    bool success = false, betterSuccess = false, prevDanseuseHit = false;
 
     for (auto input = game.turn.player.cbegin() + startAt; input != game.turn.player.cend(); ++input) {
       auto inputOn = input->on - game.turn.startedAt;
@@ -337,6 +338,17 @@ void drawEvaluation() {
         success = input->reaction == Reaction::PARRY2 && inputOn <= lastNs;
       } else if (event.action == Action::JUMP) {
         success = input->reaction == Reaction::JUMP && inputOn <= lastNs;
+      } else if (event.action == Action::DANSEUSE) {
+        if (prevDanseuseHit) {
+          success =
+            (input->reaction == Reaction::DODGE || input->reaction == Reaction::PARRY)
+              && inputOn <= lastNs;
+          prevDanseuseHit = false;
+        } else {
+          prevDanseuseHit =
+            (input->reaction == Reaction::DODGE || input->reaction == Reaction::PARRY)
+              && inputOn <= lastNs;
+        }
       } else {
         if (input->reaction == Reaction::PARRY) {
           betterSuccess = inputOn >= firstNs2 && inputOn <= lastNs2;
@@ -490,7 +502,7 @@ void newGame() {
   size_t lastOffset = 0;
   size_t eventsLeft = currentDifficulty->numEvents;
   while (eventsLeft > 0) {
-    GameEvent gameEvent;
+    auto& gameEvent = newEvents.emplace_back();
 
     // time offset
     auto result = lastOffset + currentDifficulty->pauseDistrib(randomGenerator);
@@ -507,12 +519,19 @@ void newGame() {
     }
 
     eventsLeft -= 1;
-    newEvents.emplace_back(std::move(gameEvent));
 
     // repeat dodge / parry in a row maybe
     if (gameEvent.action == Action::DODGE_PARRY) {
       auto followEvents = std::min(eventsLeft, currentDifficulty->numDistrib(randomGenerator));
       auto interval = currentDifficulty->repeatDistrib(randomGenerator);
+
+      // Danseuse very-fast double case, treat as one
+      result = typeDistrib(randomGenerator);
+      if (followEvents == 1 && result <= 1) {
+        gameEvent.action = Action::DANSEUSE;
+        followEvents = 0;
+      }
+
       for (size_t i = 0; i < followEvents; ++i) {
         GameEvent followEvent;
         followEvent.action = gameEvent.action;
@@ -592,7 +611,9 @@ void paintTheGame() {
 
   uint8_t r = 0, g = 0, b = 0, n = 0;
   for (auto& event : game.events) {
-    if (event.action == Action::DODGE_PARRY) {
+    if (event.action == Action::DANSEUSE) {
+      r = 138; g = 157; b = 242, n = 0;
+    } else if (event.action == Action::DODGE_PARRY) {
       r = 125; g = 95; b = 150, n = 0;
     } else if (event.action == Action::PARRY2) {
       r = 150; g = 50; b = 70, n = 2;

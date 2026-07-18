@@ -26,7 +26,7 @@ delays, in a way similar to _Guitar Hero_.
 Four rows represent the default interactions any keys, from top to bottom,
 keyboard or XBox controller:
 
-1. Dodge: Q / B
+1. Dodge: Q / B &ndash; if it's light blue, hit twice ( _Danseuse_ timing)
 1. Parry: E / RB
 1. Gradient parry: W / RT
 1. Jump: Space / A
