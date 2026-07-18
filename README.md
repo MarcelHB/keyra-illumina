@@ -39,8 +39,8 @@ Additionally, you may control the tool (keyboard / XBox controller):
 
 * R / L (M1): Randomize layout
 * S / burger button: Restart
-* + / arrow up: Increase difficulty
-* - / arrow down: Decrease difficulty
+* `+` / arrow up: Increase difficulty
+* `-` / arrow down: Decrease difficulty
 * ESC / windows button: Exit
 
 You may want to start the game with `-novsync` to test without
