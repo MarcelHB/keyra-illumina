@@ -35,6 +35,8 @@ IF (USE_TRACY)
 ENDIF()
 
 ADD_EXECUTABLE(keyll
+  common.cpp
+  setup.cpp
   main.cpp
 )
 
