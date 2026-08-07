@@ -6,6 +6,7 @@ dest="build/win_x64"
 mkdir -p "$dest"
 
 cp "build/keyll.exe" "$dest"
+cp "build/simon.exe" "$dest"
 
 for dep in ${dependencies[@]}; do
   location=($(whereis "$dep"))

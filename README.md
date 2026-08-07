@@ -21,7 +21,9 @@ lose the battle. Let's rule out PEBKAC.
 This tool makes you play training rounds and helps analyzing input
 delays, in a way similar to _Guitar Hero_.
 
-## Use
+## Use (random game)
+
+Start the `keyll` executable.
 
 Four rows represent the default interactions any keys, from top to bottom,
 keyboard or XBox controller:
@@ -42,6 +44,26 @@ Additionally, you may control the tool (keyboard / XBox controller):
 * `+` / arrow up: Increase difficulty
 * `-` / arrow down: Decrease difficulty
 * ESC / windows button: Exit
+
+## Use (Simon mode)
+
+Start the `simon` executable.
+
+Playing the main game's Simon attacks, on normal difficulty, parry-only!
+
+* S / burger button: Restart
+* `+` / arrow up: next phase
+* `-` / arrow down: previous phase
+* ESC / windows button: Exit
+
+Each phase once goes through all these attacks, in that order:
+
+* phase 1: sword to the ground, short combo, powerful combo, long
+combo
+* phase 2/3: short combo, powerful combo, long combo, sword of
+Lumière, lightspeed attack
+
+## Misc
 
 You may want to start the game with `-novsync` to test without
 application-enforced VSync.

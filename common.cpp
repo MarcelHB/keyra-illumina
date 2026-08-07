@@ -212,9 +212,9 @@ void paintTheGame(GameState& gameState, RenderState& renderState, Config& config
   }
   SDL_FlushRenderer(renderState.sdlRenderer);
 
-  uint8_t tracks = gameState.gameMode == GameMode::SIMON ? 2 : 4;
+  uint8_t tracks = gameState.gameMode == GameMode::SIMON ? 3 : 4;
 
-  // 2/4 tracks + 2 margin
+  // 3/4 tracks + 2 margin
   SDL_SetRenderDrawColor(renderState.sdlRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   auto segmentHeight = config.windowHeight / (tracks + 2);
   for (size_t i = 0; i < tracks; ++i) {
@@ -240,16 +240,23 @@ void paintTheGame(GameState& gameState, RenderState& renderState, Config& config
     SDL_SetRenderDrawColor(renderState.sdlRenderer, r, g, b, SDL_ALPHA_OPAQUE);
 
     SDL_FRect rect;
-    rect.x = timeToX(event.from);
-    rect.w = timeToX(event.from + gameState.currentDifficulty->timeframeLong) - rect.x;
-    rect.y = (1 + n) * segmentHeight + segmentHeight / 4;
     rect.h = segmentHeight / 2;
-    SDL_RenderFillRect(renderState.sdlRenderer, &rect);
+    rect.x = timeToX(event.from);
+
+    if (gameState.gameMode == GameMode::SIMON) {
+      n = n - 1;
+    }
+
+    if (gameState.gameMode != GameMode::SIMON || event.action != Action::DODGE_PARRY) {
+      rect.w = timeToX(event.from + gameState.currentDifficulty->timeframeLong) - rect.x;
+      rect.y = (n + 1) * segmentHeight + segmentHeight / 4;
+      SDL_RenderFillRect(renderState.sdlRenderer, &rect);
+    }
 
     if (event.action == Action::DODGE_PARRY) {
       rect.x += timeToX((gameState.currentDifficulty->timeframeLong - gameState.currentDifficulty->timeframeShort) / 2);
       rect.w = timeToX(gameState.currentDifficulty->timeframeShort);
-      rect.y = 2 * segmentHeight + segmentHeight / 4;
+      rect.y = (gameState.gameMode == GameMode::SIMON ? 1 : 2) * segmentHeight + segmentHeight / 4;
       SDL_RenderFillRect(renderState.sdlRenderer, &rect);
     }
   }

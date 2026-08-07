@@ -40,6 +40,12 @@ ADD_EXECUTABLE(keyll
   main.cpp
 )
 
+ADD_EXECUTABLE(simon
+  common.cpp
+  setup.cpp
+  simon.cpp
+)
+
 IF (WIN32)
   IF (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
@@ -48,12 +54,20 @@ IF (WIN32)
   TARGET_SOURCES(keyll PUBLIC
     rc.rc
   )
+  TARGET_SOURCES(simon PUBLIC
+    rc.rc
+  )
 ENDIF()
 
 TARGET_LINK_LIBRARIES(keyll
   ${SDL3_LIBRARIES}
 )
 
+TARGET_LINK_LIBRARIES(simon
+  ${SDL3_LIBRARIES}
+)
+
 IF (USE_TRACY)
   TARGET_LINK_LIBRARIES(keyll Tracy::TracyClient)
+  TARGET_LINK_LIBRARIES(simon Tracy::TracyClient)
 ENDIF()
