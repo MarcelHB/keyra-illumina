@@ -31,34 +31,6 @@ Difficulty hardDifficulty {
   , .repeatDistrib = std::uniform_int_distribution<size_t>{TIMEFRAME_LONG + 100'000'000, 1'000'000'000}
 };
 
-bool increaseDifficulty(GameState& gameState) {
-  if (gameState.currentDifficulty == &hardDifficulty) {
-    return false;
-  }
-
-  if (gameState.currentDifficulty == &normalDifficulty) {
-    gameState.currentDifficulty = &hardDifficulty;
-  } else {
-    gameState.currentDifficulty = &normalDifficulty;
-  }
-
-  return true;
-}
-
-bool decreaseDifficulty(GameState& gameState) {
-  if (gameState.currentDifficulty == &easyDifficulty) {
-    return false;
-  }
-
-  if (gameState.currentDifficulty == &normalDifficulty) {
-    gameState.currentDifficulty = &easyDifficulty;
-  } else {
-    gameState.currentDifficulty = &normalDifficulty;
-  }
-
-  return true;
-}
-
 void mainLoop(GameState& gameState, RenderState& renderState) {
   SDL_Event event;
   while (true) {

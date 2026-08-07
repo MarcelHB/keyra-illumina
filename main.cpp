@@ -201,3 +201,30 @@ void newGame() {
   }
 }
 
+bool increaseDifficulty(GameState& gameState) {
+  if (gameState.currentDifficulty == &hardDifficulty) {
+    return false;
+  }
+
+  if (gameState.currentDifficulty == &normalDifficulty) {
+    gameState.currentDifficulty = &hardDifficulty;
+  } else {
+    gameState.currentDifficulty = &normalDifficulty;
+  }
+
+  return true;
+}
+
+bool decreaseDifficulty(GameState& gameState) {
+  if (gameState.currentDifficulty == &easyDifficulty) {
+    return false;
+  }
+
+  if (gameState.currentDifficulty == &normalDifficulty) {
+    gameState.currentDifficulty = &easyDifficulty;
+  } else {
+    gameState.currentDifficulty = &normalDifficulty;
+  }
+
+  return true;
+}

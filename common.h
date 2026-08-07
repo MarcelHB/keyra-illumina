@@ -35,7 +35,6 @@ struct GameEvent {
 };
 
 struct Input {
-
   Reaction reaction = Reaction::NONE;
   SDL_Time on;
 };
@@ -99,9 +98,6 @@ constexpr size_t TIMEFRAME_LONG_EASY = 500'000'000;
 constexpr size_t TIMEFRAME_SHORT = 150'000'000;
 constexpr size_t TIMEFRAME_SHORT_EASY = 350'000'000;
 
-bool increaseDifficulty(GameState&);
-bool decreaseDifficulty(GameState&);
-
 void drawFrame(GameState&, RenderState&, Config&);
 void mainLoop(GameState&, RenderState&);
 void paintTheGame(GameState&, RenderState&, Config&);
@@ -114,6 +110,9 @@ void processKeyDown(GameState&, const SDL_KeyboardEvent&);
 void processKeyUp(GameState&);
 
 // to be implemented by game
+bool increaseDifficulty(GameState&);
+bool decreaseDifficulty(GameState&);
+
 void drawEvaluation();
 void newGame();
 
